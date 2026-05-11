@@ -1,11 +1,20 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Archive, TrendingUp, Lightbulb, Sparkles } from 'lucide-react';
+import { Home, Archive, TrendingUp, Lightbulb, Sparkles, User, LogOut, Shield } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { authService } from '@/services/auth';
 
-export const Navigation: React.FC = () => {
+interface NavigationProps {
+  onLogout?: () => void;
+}
+
+export const Navigation: React.FC<NavigationProps> = ({ onLogout }) => {
   const memories = useStore((state) => state.memories);
   const insights = useStore((state) => state.insights);
+  
+  const user = authService.getCurrentUser();
+  const isAdmin = user?.role === 'admin';
+
   const streakDays = React.useMemo(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
@@ -37,6 +46,12 @@ export const Navigation: React.FC = () => {
     { to: '/growth', icon: TrendingUp, label: '成长档案' },
     { to: '/insights', icon: Lightbulb, label: '洞察反馈', badge: unreadInsights },
   ];
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+  };
 
   return (
     <nav 
@@ -121,6 +136,33 @@ export const Navigation: React.FC = () => {
                   {streakDays}天
                 </span>
               </div>
+            </div>
+
+            <div className="flex items-center space-x-2 pl-4 border-l border-white/10">
+              <div className="hidden sm:flex items-center space-x-2">
+                {isAdmin && (
+                  <div 
+                    className="flex items-center space-x-1 px-2 py-1 rounded-full"
+                    style={{ backgroundColor: 'rgba(212, 165, 116, 0.2)' }}
+                  >
+                    <Shield className="w-3 h-3" style={{ color: 'var(--primary)' }} />
+                    <span className="text-xs" style={{ color: 'var(--primary)' }}>管理员</span>
+                  </div>
+                )}
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {user?.username || user?.email || '用户'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg transition-all hover:bg-white/10"
+                title="退出登录"
+              >
+                <LogOut className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+              </button>
             </div>
           </div>
         </div>

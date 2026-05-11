@@ -1,10 +1,22 @@
-export type MemoryType = 'text' | 'image' | 'voice' | 'emotion' | 'task' | 'link';
+export type MemoryType = 'text' | 'image' | 'voice' | 'emotion' | 'task' | 'link' | 'file' | 'video' | 'audio';
 
 export type TagCategory = 'idea' | 'thought' | 'memory' | 'task' | 'inspiration';
 
 export type InsightType = 'association' | 'summary' | 'reminder' | 'pattern';
 
 export type IntentType = 'share' | 'query' | 'reflect' | 'task';
+
+export type DataFormat = 'text' | 'json' | 'csv' | 'markdown' | 'html' | 'xml' | 'yaml';
+
+export interface User {
+  id: string;
+  email: string;
+  password: string;
+  username: string;
+  role: 'user' | 'admin';
+  createdAt: Date;
+  lastLoginAt?: Date;
+}
 
 export interface Memory {
   id: string;
@@ -18,6 +30,11 @@ export interface Memory {
     mood?: number;
     source?: string;
     imageUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+    mimeType?: string;
+    dataFormat?: DataFormat;
+    fileUrl?: string;
   };
   relatedIds: string[];
 }
@@ -71,6 +88,8 @@ export interface ParsedContent {
   suggestedTags: string[];
   suggestedMood?: number;
   intent: IntentType;
+  parsedData?: Record<string, any>;
+  dataFormat?: DataFormat;
 }
 
 export interface UserInput {
@@ -95,4 +114,22 @@ export interface StorageStats {
   mostUsedTags: Tag[];
   moodAverage: number;
   memoriesThisWeek: number;
+}
+
+export interface ImportResult {
+  success: boolean;
+  imported: number;
+  errors: string[];
+  memories: Omit<Memory, 'id' | 'createdAt' | 'updatedAt' | 'relatedIds'>[];
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: Omit<User, 'password'> | null;
+  token?: string;
 }
