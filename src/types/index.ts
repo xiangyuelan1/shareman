@@ -1,10 +1,22 @@
-export type MemoryType = 'text' | 'image' | 'voice' | 'emotion' | 'task' | 'link';
+export type MemoryType = 'text' | 'image' | 'voice' | 'emotion' | 'task' | 'link' | 'video' | 'file';
 
 export type TagCategory = 'idea' | 'thought' | 'memory' | 'task' | 'inspiration';
 
 export type InsightType = 'association' | 'summary' | 'reminder' | 'pattern';
 
 export type IntentType = 'share' | 'query' | 'reflect' | 'task';
+
+export type UserRole = 'user' | 'admin';
+
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  role: UserRole;
+  avatar?: string;
+  createdAt: Date;
+  lastLoginAt?: Date;
+}
 
 export interface Memory {
   id: string;
@@ -18,6 +30,11 @@ export interface Memory {
     mood?: number;
     source?: string;
     imageUrl?: string;
+    videoUrl?: string;
+    audioUrl?: string;
+    location?: string;
+    isImportant?: boolean;
+    sharedToXiaozhi?: boolean;
   };
   relatedIds: string[];
 }
@@ -59,26 +76,6 @@ export interface GrowthRecord {
   memoryCount: number;
 }
 
-export interface Entity {
-  type: 'person' | 'place' | 'concept' | 'emotion';
-  value: string;
-  confidence: number;
-}
-
-export interface ParsedContent {
-  text: string;
-  entities: Entity[];
-  suggestedTags: string[];
-  suggestedMood?: number;
-  intent: IntentType;
-}
-
-export interface UserInput {
-  type: MemoryType;
-  content: string;
-  metadata?: Partial<Memory['metadata']>;
-}
-
 export interface Pattern {
   id: string;
   type: 'mood_trend' | 'activity_pattern' | 'growth_milestone';
@@ -95,4 +92,83 @@ export interface StorageStats {
   mostUsedTags: Tag[];
   moodAverage: number;
   memoriesThisWeek: number;
+  xiaozhiCount: number;
+  plazaMessages: number;
+}
+
+export interface Xiaozhi {
+  id: string;
+  userId: string;
+  name: string;
+  avatar?: string;
+  personality: {
+    traits: string[];
+    warmth: number;
+    rationality: number;
+    humor: number;
+  };
+  interests: string[];
+  values: string[];
+  memory: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  level: number;
+  experience: number;
+}
+
+export interface XiaozhiMessage {
+  id: string;
+  xiaozhiId: string;
+  content: string;
+  type: 'user' | 'xiaozhi' | 'system';
+  createdAt: Date;
+}
+
+export interface PlazaTopic {
+  id: string;
+  title: string;
+  participants: string[];
+  messages: XiaozhiMessage[];
+  createdAt: Date;
+  isActive: boolean;
+}
+
+export interface AIMirror {
+  observations: string[];
+  lastUpdated: Date;
+  userPatterns: {
+    frequentWords: string[];
+    moodTrend: number[];
+    activityPattern: string;
+  };
+}
+
+export interface AdminConfig {
+  apiKeys: {
+    openai?: string;
+    anthropic?: string;
+    custom?: string;
+  };
+  systemSettings: {
+    maxMemoriesPerDay: number;
+    xiaozhiGrowthRate: number;
+    plazaActiveHours: string[];
+  };
+  features: {
+    xiaozhiEnabled: boolean;
+    plazaEnabled: boolean;
+    aiMirrorEnabled: boolean;
+    timeCapsuleEnabled: boolean;
+  };
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  token?: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
