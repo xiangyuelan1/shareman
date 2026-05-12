@@ -73,11 +73,18 @@ export const Navigation: React.FC<NavigationProps> = ({ onLogout, isAdmin }) => 
               <NavLink
                 to="/admin"
                 className={({ isActive }) =>
-                  `p-2 rounded-lg transition-all ${isActive ? 'text-white' : 'text-gray-400'}`
+                  `flex items-center space-x-2 px-4 py-2 rounded-xl transition-all ${
+                    isActive ? 'bg-white/20' : 'hover:bg-white/10'
+                  }`
                 }
+                style={{ 
+                  backgroundColor: 'rgba(212, 165, 116, 0.2)',
+                  color: 'var(--primary)',
+                }}
                 title="管理后台"
               >
                 <Settings className="w-5 h-5" />
+                <span className="text-sm font-medium hidden sm:inline">管理</span>
               </NavLink>
             )}
 
@@ -115,6 +122,17 @@ export const Navigation: React.FC<NavigationProps> = ({ onLogout, isAdmin }) => 
                       </span>
                     )}
                   </div>
+                  {isAdmin && (
+                    <NavLink
+                      to="/admin"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full px-4 py-2 text-left text-sm flex items-center space-x-2 hover:bg-white/10 transition-all"
+                      style={{ color: 'var(--primary)' }}
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>管理后台</span>
+                    </NavLink>
+                  )}
                   <button
                     onClick={() => {
                       onLogout?.();

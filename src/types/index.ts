@@ -25,17 +25,18 @@ export interface Memory {
   createdAt: Date;
   updatedAt: Date;
   metadata: {
-    tags?: string[];
-    persons?: string[];
-    mood?: number;
-    source?: string;
-    imageUrl?: string;
-    videoUrl?: string;
-    audioUrl?: string;
-    location?: string;
-    isImportant?: boolean;
-    sharedToXiaozhi?: boolean;
-  };
+        tags?: string[];
+        persons?: string[];
+        mood?: number;
+        source?: string;
+        imageUrl?: string;
+        videoUrl?: string;
+        audioUrl?: string;
+        voiceTranscript?: string;
+        location?: string;
+        isImportant?: boolean;
+        sharedToXiaozhi?: boolean;
+      };
   relatedIds: string[];
 }
 
