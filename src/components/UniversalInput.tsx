@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Send, Image, Mic, Smile, Link2, FileText } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Send, Image, Mic, Smile, Link2, FileText, Upload, X, Camera } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { understandingEngine } from '@/engine/UnderstandingEngine';
 import { insightEngine } from '@/engine/InsightEngine';
@@ -7,14 +7,20 @@ import { EmotionPicker } from './EmotionPicker';
 
 type InputMode = 'text' | 'image' | 'voice' | 'emotion' | 'link';
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+
 export const UniversalInput: React.FC = () => {
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<InputMode>('text');
   const [selectedMood, setSelectedMood] = useState<number>(0.5);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showInsight, setShowInsight] = useState(false);
   const [currentInsight, setCurrentInsight] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { addMemory, memories, addInsight } = useStore();
 
@@ -26,8 +32,75 @@ export const UniversalInput: React.FC = () => {
     { mode: 'link', icon: Link2, label: '链接' },
   ];
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      alert('不支持的图片格式，请上传 JPG、PNG、GIF、WebP 或 SVG 格式的图片');
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert('图片大小不能超过 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setUploadedImage(result);
+      setImageUrl(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      alert('不支持的图片格式，请上传 JPG、PNG、GIF、WebP 或 SVG 格式的图片');
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert('图片大小不能超过 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setUploadedImage(result);
+      setImageUrl(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setUploadedImage(null);
+    setImageUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async () => {
-    if (!content.trim() && !imageUrl) return;
+    if (!content.trim() && !imageUrl && mode !== 'emotion') return;
 
     setIsTyping(true);
 
@@ -61,7 +134,11 @@ export const UniversalInput: React.FC = () => {
 
     setContent('');
     setImageUrl('');
+    setUploadedImage(null);
     setSelectedMood(0.5);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -97,13 +174,55 @@ export const UniversalInput: React.FC = () => {
           <EmotionPicker value={selectedMood} onChange={setSelectedMood} />
         ) : mode === 'image' ? (
           <div className="space-y-3">
-            <input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="输入图片URL或描述..."
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 transition-all focus:border-[var(--primary)]"
-            />
+            {uploadedImage ? (
+              <div className="relative">
+                <img
+                  src={uploadedImage}
+                  alt="上传的图片"
+                  className="w-full max-h-64 object-contain rounded-xl"
+                />
+                <button
+                  onClick={clearImage}
+                  className="absolute top-2 right-2 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                  isDragging
+                    ? 'border-[var(--primary)] bg-[var(--primary)]/10'
+                    : 'border-white/20 hover:border-white/40'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={SUPPORTED_IMAGE_TYPES.join(',')}
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Camera className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-secondary)' }} />
+                <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  拖拽图片到此处，或
+                </p>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                  style={{ backgroundColor: 'var(--primary)', color: 'var(--background)' }}
+                >
+                  <Upload className="w-4 h-4 inline mr-2" />
+                  选择图片
+                </button>
+                <p className="text-xs mt-3" style={{ color: 'var(--text-secondary)' }}>
+                  支持 JPG、PNG、GIF、WebP、SVG，最大 5MB
+                </p>
+              </div>
+            )}
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -187,7 +306,7 @@ export const UniversalInput: React.FC = () => {
 
       <div className="mt-4 flex items-center justify-between">
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          按 Enter 发送，Shift + Enter 换行
+          {mode === 'image' ? '拖拽或点击上传图片' : '按 Enter 发送，Shift + Enter 换行'}
         </p>
         <button
           onClick={handleSubmit}
